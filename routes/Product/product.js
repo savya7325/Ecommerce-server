@@ -2,10 +2,15 @@ import { body, validationResult } from 'express-validator';
 import { Router } from "express";
 import {getAllProduct, viewProduct,deleteProduct,updateProduct} from "../../controller/product.js";
 import { addProduct } from "../../controller/product.js";
-import verifyToken from '../../middleware/verifyToken.js';
-import isAdmin from '../../middleware/isAdmin.js';
-import { checkProductOwner } from '../../MiddleWare/checkOwner.js';
-import upload from "../../MiddleWare/uploadMiddleware.js";
+import verifyToken from "../../middleware/verifyToken.js";
+import isAdmin from "../../middleware/isAdmin.js";
+import { checkProductOwner } from "../../middleware/checkOwner.js";
+import upload from "../../middleware/uploadMiddleware.js";
+
+// import verifyToken from '../../middleware/verifyToken.js';
+// import isAdmin from '../../middleware/isAdmin.js';
+// import { checkProductOwner } from '../../MiddleWare/checkOwner.js';
+// import upload from "../../MiddleWare/uploadMiddleware.js";
 
 const product = Router()
 
@@ -29,7 +34,14 @@ product.post('/add', verifyToken, upload.single('image'),
     next(); 
   }, addProduct);
 
-product.delete('/:id', verifyToken, isAdmin, deleteProduct);
+// product.delete('/:id', verifyToken, isAdmin, deleteProduct);
+product.delete('/:id', verifyToken, async (req, res, next) => {
+  if (req.user.role === 'admin') {
+    return next();
+  } else {
+    return checkProductOwner(req, res, next);
+  }
+}, deleteProduct);
 
 product.put('/update/:id', verifyToken, checkProductOwner, upload.single("image"),updateProduct);
 
